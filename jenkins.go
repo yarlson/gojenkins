@@ -25,6 +25,13 @@ import (
 	"strings"
 )
 
+const (
+	KnownHostsFileKey   = "hudson.plugins.sshslaves.verifiers.KnownHostsFileKeyVerificationStrategy"
+	ManuallyProvidedKey = "hudson.plugins.sshslaves.verifiers.ManuallyProvidedKeyVerificationStrategy"
+	ManuallyTrustedKey  = "hudson.plugins.sshslaves.verifiers.ManuallyTrustedKeyVerificationStrategy"
+	NonVerifyingKey     = "hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy"
+)
+
 // Basic Authentication
 type BasicAuth struct {
 	Username string
@@ -112,6 +119,10 @@ func (j *Jenkins) CreateNode(name string, numExecutors int, description string, 
 		params["method"] = "JNLPLauncher"
 	}
 
+	if _, ok := params["sshHostKeyVerificationStrategy"]; !ok {
+		params["sshHostKeyVerificationStrategy"] = KnownHostsFileKey
+	}
+
 	method := params["method"]
 	var launcher map[string]string
 	switch method {
@@ -121,20 +132,21 @@ func (j *Jenkins) CreateNode(name string, numExecutors int, description string, 
 		launcher = map[string]string{"stapler-class": "hudson.slaves.JNLPLauncher"}
 	case "SSHLauncher":
 		launcher = map[string]string{
-			"stapler-class":        "hudson.plugins.sshslaves.SSHLauncher",
-			"$class":               "hudson.plugins.sshslaves.SSHLauncher",
-			"host":                 params["host"],
-			"port":                 params["port"],
-			"credentialsId":        params["credentialsId"],
-			"jvmOptions":           params["jvmOptions"],
-			"javaPath":             params["javaPath"],
-			"prefixStartSlaveCmd":  params["prefixStartSlaveCmd"],
-			"suffixStartSlaveCmd":  params["suffixStartSlaveCmd"],
-			"maxNumRetries":        params["maxNumRetries"],
-			"retryWaitTime":        params["retryWaitTime"],
-			"lanuchTimeoutSeconds": params["lanuchTimeoutSeconds"],
-			"type":                 "hudson.slaves.DumbSlave",
-			"stapler-class-bag":    "true"}
+			"stapler-class":                  "hudson.plugins.sshslaves.SSHLauncher",
+			"$class":                         "hudson.plugins.sshslaves.SSHLauncher",
+			"host":                           params["host"],
+			"port":                           params["port"],
+			"credentialsId":                  params["credentialsId"],
+			"sshHostKeyVerificationStrategy": params["sshHostKeyVerificationStrategy"],
+			"jvmOptions":                     params["jvmOptions"],
+			"javaPath":                       params["javaPath"],
+			"prefixStartSlaveCmd":            params["prefixStartSlaveCmd"],
+			"suffixStartSlaveCmd":            params["suffixStartSlaveCmd"],
+			"maxNumRetries":                  params["maxNumRetries"],
+			"retryWaitTime":                  params["retryWaitTime"],
+			"lanuchTimeoutSeconds":           params["lanuchTimeoutSeconds"],
+			"type":                           "hudson.slaves.DumbSlave",
+			"stapler-class-bag":              "true"}
 	default:
 		return nil, errors.New("launcher method not supported")
 	}
