@@ -103,16 +103,27 @@ func (j *Jenkins) SafeRestart() error {
 	return err
 }
 
+func getVerificationStrategy(strategy string) map[string]string {
+	if strategy == KnownHostsFileKey {
+		return map[string]string{
+			"$class":        KnownHostsFileKey,
+			"stapler-class": KnownHostsFileKey,
+		}
+	}
+
+	return nil
+}
+
 // Create a new Node
 // Can be JNLPLauncher or SSHLauncher
 // Example : jenkins.CreateNode("nodeName", 1, "Description", "/var/lib/jenkins", "jdk8 docker", map[string]string{"method": "JNLPLauncher"})
 // By Default JNLPLauncher is created
 // Multiple labels should be separated by blanks
 func (j *Jenkins) CreateNode(name string, numExecutors int, description string, remoteFS string, label string, options ...interface{}) (*Node, error) {
-	params := map[string]string{"method": "JNLPLauncher"}
+	params := map[string]interface{}{"method": "JNLPLauncher"}
 
 	if len(options) > 0 {
-		params, _ = options[0].(map[string]string)
+		params, _ = options[0].(map[string]interface{})
 	}
 
 	if _, ok := params["method"]; !ok {
@@ -120,18 +131,18 @@ func (j *Jenkins) CreateNode(name string, numExecutors int, description string, 
 	}
 
 	if _, ok := params["sshHostKeyVerificationStrategy"]; !ok {
-		params["sshHostKeyVerificationStrategy"] = KnownHostsFileKey
+		params["sshHostKeyVerificationStrategy"] = getVerificationStrategy(KnownHostsFileKey)
 	}
 
 	method := params["method"]
-	var launcher map[string]string
+	var launcher map[string]interface{}
 	switch method {
 	case "":
 		fallthrough
 	case "JNLPLauncher":
-		launcher = map[string]string{"stapler-class": "hudson.slaves.JNLPLauncher"}
+		launcher = map[string]interface{}{"stapler-class": "hudson.slaves.JNLPLauncher"}
 	case "SSHLauncher":
-		launcher = map[string]string{
+		launcher = map[string]interface{}{
 			"stapler-class":                  "hudson.plugins.sshslaves.SSHLauncher",
 			"$class":                         "hudson.plugins.sshslaves.SSHLauncher",
 			"host":                           params["host"],
@@ -146,24 +157,25 @@ func (j *Jenkins) CreateNode(name string, numExecutors int, description string, 
 			"retryWaitTime":                  params["retryWaitTime"],
 			"lanuchTimeoutSeconds":           params["lanuchTimeoutSeconds"],
 			"type":                           "hudson.slaves.DumbSlave",
-			"stapler-class-bag":              "true"}
+			"stapler-class-bag":              "true",
+		}
 	default:
 		return nil, errors.New("launcher method not supported")
 	}
 
 	node := &Node{Jenkins: j, Raw: new(NodeResponse), Base: "/computer/" + name}
-	NODE_TYPE := "hudson.slaves.DumbSlave$DescriptorImpl"
-	MODE := "NORMAL"
+	NodeType := "hudson.slaves.DumbSlave$DescriptorImpl"
+	Mode := "NORMAL"
 	qr := map[string]string{
 		"name": name,
-		"type": NODE_TYPE,
+		"type": NodeType,
 		"json": makeJson(map[string]interface{}{
 			"name":               name,
 			"nodeDescription":    description,
 			"remoteFS":           remoteFS,
 			"numExecutors":       numExecutors,
-			"mode":               MODE,
-			"type":               NODE_TYPE,
+			"mode":               Mode,
+			"type":               NodeType,
 			"labelString":        label,
 			"retentionsStrategy": map[string]string{"stapler-class": "hudson.slaves.RetentionStrategy$Always"},
 			"nodeProperties":     map[string]string{"stapler-class-bag": "true"},
