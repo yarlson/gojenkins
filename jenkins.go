@@ -109,14 +109,10 @@ func (j *Jenkins) SafeRestart(ctx context.Context) error {
 }
 
 func getVerificationStrategy(strategy string) map[string]string {
-	if strategy == KnownHostsFileKey {
-		return map[string]string{
-			"$class":        KnownHostsFileKey,
-			"stapler-class": KnownHostsFileKey,
-		}
+	return map[string]string{
+		"$class":        strategy,
+		"stapler-class": strategy,
 	}
-
-	return nil
 }
 
 // Create a new Node
