@@ -131,8 +131,9 @@ func (j *Jenkins) CreateNode(ctx context.Context, name string, numExecutors int,
 		params["method"] = "JNLPLauncher"
 	}
 
-	if _, ok := params["sshHostKeyVerificationStrategy"]; !ok {
-		params["sshHostKeyVerificationStrategy"] = getVerificationStrategy(KnownHostsFileKey)
+	sshHostKeyVerificationStrategy := getVerificationStrategy(KnownHostsFileKey)
+	if _, ok := params["sshHostKeyVerificationStrategy"]; ok {
+		sshHostKeyVerificationStrategy = getVerificationStrategy(params["sshHostKeyVerificationStrategy"].(string))
 	}
 
 	method := params["method"]
@@ -149,7 +150,7 @@ func (j *Jenkins) CreateNode(ctx context.Context, name string, numExecutors int,
 			"host":                           params["host"],
 			"port":                           params["port"],
 			"credentialsId":                  params["credentialsId"],
-			"sshHostKeyVerificationStrategy": params["sshHostKeyVerificationStrategy"],
+			"sshHostKeyVerificationStrategy": sshHostKeyVerificationStrategy,
 			"jvmOptions":                     params["jvmOptions"],
 			"javaPath":                       params["javaPath"],
 			"prefixStartSlaveCmd":            params["prefixStartSlaveCmd"],
