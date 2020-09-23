@@ -439,6 +439,10 @@ func (j *Job) InvokeSimple(ctx context.Context, params map[string]string) (int64
 	}
 	data := url.Values{}
 	for k, v := range params {
+		if k == "delay" {
+			endpoint = fmt.Sprintf("%s?delay=%ss", endpoint, v)
+			continue
+		}
 		data.Set(k, v)
 	}
 	resp, err := j.Jenkins.Requester.Post(ctx, j.Base+endpoint, bytes.NewBufferString(data.Encode()), nil, nil)
