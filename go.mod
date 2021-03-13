@@ -1,4 +1,4 @@
-module github.com/yarlson/gojenkins
+module github.com/yarlson/gojenkins/v2
 
 go 1.13
 
