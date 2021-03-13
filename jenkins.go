@@ -121,10 +121,10 @@ func getVerificationStrategy(strategy string) map[string]string {
 // By Default JNLPLauncher is created
 // Multiple labels should be separated by blanks
 func (j *Jenkins) CreateNode(ctx context.Context, name string, numExecutors int, description string, remoteFS string, label string, options ...interface{}) (*Node, error) {
-	params := map[string]interface{}{"method": "JNLPLauncher"}
+	params := map[string]string{"method": "JNLPLauncher"}
 
 	if len(options) > 0 {
-		params, _ = options[0].(map[string]interface{})
+		params, _ = options[0].(map[string]string)
 	}
 
 	if _, ok := params["method"]; !ok {
@@ -133,7 +133,7 @@ func (j *Jenkins) CreateNode(ctx context.Context, name string, numExecutors int,
 
 	sshHostKeyVerificationStrategy := getVerificationStrategy(KnownHostsFileKey)
 	if _, ok := params["sshHostKeyVerificationStrategy"]; ok {
-		sshHostKeyVerificationStrategy = getVerificationStrategy(params["sshHostKeyVerificationStrategy"].(string))
+		sshHostKeyVerificationStrategy = getVerificationStrategy(params["sshHostKeyVerificationStrategy"])
 	}
 
 	method := params["method"]
